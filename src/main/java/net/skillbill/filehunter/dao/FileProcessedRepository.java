@@ -26,10 +26,10 @@ import java.util.List;
 
 public interface FileProcessedRepository {
 
-    FileProcessed create(FileProcessed in);
+    FileProcessed create(FileProcessed in, String fileContext);
 
     FileProcessed update(FileProcessed in);
 
-    List<FileProcessed> findAll();
+    List<FileProcessed> findAll( String fileContext);
 
 }

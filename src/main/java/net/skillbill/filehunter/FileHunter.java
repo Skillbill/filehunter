@@ -21,6 +21,7 @@
 package net.skillbill.filehunter;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.skillbill.filehunter.dao.FileProcessedRepository;
@@ -47,28 +48,19 @@ import java.util.List;
 @Getter
 @Setter
 @Slf4j
+@RequiredArgsConstructor
 public class FileHunter {
-    public FileHunter(FileProcessedRepository fileContributiRepository, FileProcessor fileProcessor, String vfsRoot, String basePath, String filePattern, String smbDomain, String smbUser, String smbPassword) {
-        this.fileProcessedRepository = fileContributiRepository;
-        this.fileProcessor = fileProcessor;
-        this.vfsRoot = vfsRoot;
-        this.basePath = basePath;
-        this.filePattern = filePattern;
-        this.smbDomain = StringUtils.isNotBlank(smbDomain)? smbDomain:null;
-        this.smbUser = StringUtils.isNotBlank(smbUser)? smbUser:null;
-        this.smbPassword = StringUtils.isNotBlank(smbPassword)? smbPassword:null;
 
-    }
+    private final FileProcessedRepository fileProcessedRepository;
 
-    private FileProcessedRepository fileProcessedRepository;
-
-    private FileProcessor fileProcessor;
-    private String vfsRoot;
-    private String basePath;
-    private String filePattern;
-    private String smbDomain;
-    private String smbUser;
-    private String smbPassword;
+    private final  FileProcessor fileProcessor;
+    private final  String fileContext;
+    private final  String vfsRoot;
+    private final  String basePath;
+    private final  String filePattern;
+    private final  String smbDomain;
+    private final  String smbUser;
+    private final  String smbPassword;
 
     private final HashMap<String,FileProcessed> fmap = new HashMap<>();
     private final HashMap<String,FileProcessed> md5map = new HashMap<>();
@@ -81,7 +73,7 @@ public class FileHunter {
     public void execute() {
 
 
-        List<FileProcessed> all = fileProcessedRepository.findAll();
+        List<FileProcessed> all = fileProcessedRepository.findAll(fileContext);
         fmap.clear();
         md5map.clear();
         for (FileProcessed fileContributi : all) {
@@ -109,12 +101,20 @@ public class FileHunter {
             processDir(filePattern, fileObject);
 
         } catch (Exception ex) {
-            log.error("Errore nel recupero dei file contributi",ex);
+            log.error("Error processing file",ex);
             throw  new RuntimeException(ex);
         }
     }
 
     private void processDir(String filePattern, FileObject fileObject) throws IOException, DigestException, NoSuchAlgorithmException {
+        if(!fileObject.isFolder()){
+            if(fileObject.isFile()){
+                throw new IllegalArgumentException("Error: provided file is not a directory: "+fileObject.getURL());
+            }
+            else{
+                throw new IllegalArgumentException("Error: unable to retrieve file object: "+fileObject.getURL());
+            }
+        }
         System.out.println("dir is "+fileObject.getURL());
         FileObject[] children = fileObject.getChildren();
         for (FileObject child : children) {
@@ -191,7 +191,7 @@ public class FileHunter {
             if(fileProcessed == null){
                 fileProcessed = new FileProcessed(fileUrl, millsToLocalDateTime( fileContent.getLastModifiedTime()), loadTime, fileContent.getSize(), md5HexChecksum, resulLog, resulErrorLog);
                 log.info(" going to load file:"+fileProcessed);
-                fileProcessedRepository.create(fileProcessed);
+                fileProcessedRepository.create(fileProcessed, fileContext);
                 newFilesFound++;
             }
             else{

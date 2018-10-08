@@ -43,7 +43,7 @@ public class FileProcessedRepositoryJdbcImpl implements FileProcessedRepository 
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS processed_file (id INTEGER, url TEXT, lastModifyTime INTEGER, loadTime INTEGER, size INTEGER, md5sum TEXT, message TEXT, error_message TEXT);");
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS processed_file (id INTEGER, file_context TEXT, url TEXT, lastModifyTime INTEGER, loadTime INTEGER, size INTEGER, md5sum TEXT, message TEXT, error_message TEXT);");
         } catch (Exception e) {
             log.error("error in db connection initialization",e);
             throw new RuntimeException("error in db connection initialization", e);
@@ -54,14 +54,15 @@ public class FileProcessedRepositoryJdbcImpl implements FileProcessedRepository 
 
     @Override
     @SneakyThrows
-    public FileProcessed create(FileProcessed in) {
+    public FileProcessed create(FileProcessed in, String fileContext) {
         @Cleanup
         Connection connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
         @Cleanup
-        PreparedStatement pstmt = connection.prepareStatement("insert into processed_file values(?,?,?,?,?,?,?,?)");
+        PreparedStatement pstmt = connection.prepareStatement("insert into processed_file values(?,?,?,?,?,?,?,?,?)");
         int i = 0;
         long id = System.nanoTime();
         pstmt.setLong(++i, id);
+        pstmt.setString(++i,fileContext);
         pstmt.setString(++i,in.getURL());
         pstmt.setLong(++i,in.getLastModifyTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
         pstmt.setLong(++i,in.getLoadTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
@@ -98,11 +99,12 @@ public class FileProcessedRepositoryJdbcImpl implements FileProcessedRepository 
 
     @Override
     @SneakyThrows
-    public List<FileProcessed> findAll() {
+    public List<FileProcessed> findAll(String fileContext) {
         @Cleanup
         Connection connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
         @Cleanup
-        PreparedStatement pstmt = connection.prepareStatement("select * from processed_file");
+        PreparedStatement pstmt = connection.prepareStatement("select * from processed_file where file_context=?");
+        pstmt.setString(1, fileContext);
         @Cleanup
         ResultSet rset =  pstmt.executeQuery();
 

@@ -27,12 +27,9 @@ import java.io.File;
 
 public class FileHunterBaseTest {
 
-    private static FileHunter fh = new FileHunter(new FileProcessedRepositoryJdbcImpl(null, null, null, null), new FileProcessor() {
-        @Override
-        public FileProcessorResult processFile(File tempFile, String fileUrl) {
-            return new FileProcessorResult("ok", null);
-        }
-    }, "/", "/home/franz/pdf", ".+\\.pdf", null, null, null);
+    private static FileHunter fh = new FileHunter(new FileProcessedRepositoryJdbcImpl(null, null, null, null), (tempFile, fileUrl) -> new FileProcessorResult("ok", null),"test",
+            "smb://10.11.11.84/K",
+            "data", ".+\\.pdf", null, "skillbill", "skillbill");
 
     public static void main(String[] args){
         fh.execute();
