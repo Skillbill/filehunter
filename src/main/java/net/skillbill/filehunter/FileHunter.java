@@ -23,11 +23,10 @@ package net.skillbill.filehunter;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.skillbill.filehunter.dao.FileProcessedRepository;
 import net.skillbill.filehunter.model.FileProcessed;
-
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.vfs2.*;
 import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
 import org.apache.commons.vfs2.impl.DefaultFileSystemConfigBuilder;
@@ -115,7 +114,6 @@ public class FileHunter {
                 throw new IllegalArgumentException("Error: unable to retrieve file object: "+fileObject.getURL());
             }
         }
-        System.out.println("dir is "+fileObject.getURL());
         FileObject[] children = fileObject.getChildren();
         for (FileObject child : children) {
             if(child.isFile()) {
@@ -143,13 +141,15 @@ public class FileHunter {
 
     private void processFile(FileObject child) throws IOException, NoSuchAlgorithmException, DigestException {
         String fileUrl = child.getURL().toExternalForm();
-        log.info("processing file :"+ fileUrl);
+        log.info("processing of file :{} START", fileUrl);
         FileProcessed fileProcessed = fmap.get(fileUrl);
         FileContent fileContent = child.getContent();
+        log.debug("fileContent: {}",dumpFile(fileUrl, fileContent));
+        log.debug("fileProcessed: {}",fileProcessed);
         if (fileProcessed == null || fileProcessed.getLastModifyTime() == null|| fileContent.getLastModifiedTime() > localDateTimeToMills(  fileProcessed.getLastModifyTime()) || fileContent.getSize() != fileProcessed.getSize()){
             log.info("file:"+fileUrl+" is new or modified, loading it");
             InputStream content = fileContent.getInputStream();
-            File tempFile = File.createTempFile("contributo_", ".EDF");
+            File tempFile = File.createTempFile("filehunter", ".tmp");
             byte[] buf = new byte[1024];
             FileOutputStream fout = new FileOutputStream(tempFile);
             int readen= -1;
@@ -176,7 +176,7 @@ public class FileHunter {
             String resulErrorLog;
             if(fileProcessed == null || !md5HexChecksum.equals( fileProcessed.getMd5sum())) {
                 loadTime = LocalDateTime.now();
-                log.info(" going to load contributi from file:"+fileUrl);
+                log.info(" going to process file:"+fileUrl);
                 FileProcessorResult result = fileProcessor.processFile(tempFile, fileUrl);
                 resulLog = result.getMessage();
                 resulErrorLog = result.getErrorMessage();
@@ -203,7 +203,7 @@ public class FileHunter {
                 fileProcessed.setMessage (resulLog);
                 fileProcessed.setErrorMessage(resulErrorLog);
 
-                log.info(" going to update file:"+fileProcessed);
+                log.info(" going to update processing metadata for file:"+fileProcessed);
                 fileProcessedRepository.update(fileProcessed);
                 noNewFilesFound++;
                 updateFileReferences++;
@@ -212,7 +212,15 @@ public class FileHunter {
         } else {
             noNewFilesFound++;
         }
+        log.info("processing of file :{} END", fileUrl);
     }
+
+    @SneakyThrows
+    private String dumpFile(String fileUrl, FileContent fileContent) {
+        //(id=64051800236909, URL=sftp://franz:Lotta2014@localhost/sergiorossi/contactone/employee_20181012.csv, lastModifyTime=2018-10-15T18:21:51, loadTime=2018-10-15T18:22:59.990, size=23686, md5sum=40336c20b5e8a8ff031d5ae41fdc9b9f, message=processed 137, errorMessage=)
+        return "FileContent(URL="+fileUrl+", lastModifyTime"+millsToLocalDateTime(fileContent.getLastModifiedTime())+", size="+fileContent.getSize();
+    }
+
     public static LocalDateTime millsToLocalDateTime(long millis) {
         Instant instant = Instant.ofEpochMilli(millis);
         LocalDateTime date = instant.atZone(ZoneId.systemDefault()).toLocalDateTime();

@@ -24,10 +24,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
-@ToString
 @AllArgsConstructor
 public class FileProcessed {
 

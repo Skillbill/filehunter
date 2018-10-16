@@ -33,12 +33,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class FileProcessedRepositoryJdbcImpl implements FileProcessedRepository {
+public class FileProcessedRepositoryJdbcSqliteImpl implements FileProcessedRepository {
 
-    public FileProcessedRepositoryJdbcImpl(String driverClassname, String url, String login, String password) {
+    private final String jdbcUrl;
+
+    public FileProcessedRepositoryJdbcSqliteImpl(String path) {
+        this.jdbcUrl = "jdbc:sqlite:"+path;
         try {
             @Cleanup
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
+            Connection connection = DriverManager.getConnection(this.jdbcUrl);
             @Cleanup
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
@@ -56,7 +59,7 @@ public class FileProcessedRepositoryJdbcImpl implements FileProcessedRepository 
     @SneakyThrows
     public FileProcessed create(FileProcessed in, String fileContext) {
         @Cleanup
-        Connection connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
+        Connection connection = DriverManager.getConnection(this.jdbcUrl);
         @Cleanup
         PreparedStatement pstmt = connection.prepareStatement("insert into processed_file values(?,?,?,?,?,?,?,?,?)");
         int i = 0;
@@ -80,7 +83,7 @@ public class FileProcessedRepositoryJdbcImpl implements FileProcessedRepository 
     @SneakyThrows
     public FileProcessed update(FileProcessed in) {
         @Cleanup
-        Connection connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
+        Connection connection = DriverManager.getConnection(this.jdbcUrl);
         @Cleanup
         PreparedStatement pstmt = connection.prepareStatement("update processed_file set url=?, lastModifyTime=?, loadTime=?, size=?, md5sum=?, message=?, error_message=? where id =?");
         int i = 0;
@@ -101,7 +104,7 @@ public class FileProcessedRepositoryJdbcImpl implements FileProcessedRepository 
     @SneakyThrows
     public List<FileProcessed> findAll(String fileContext) {
         @Cleanup
-        Connection connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
+        Connection connection = DriverManager.getConnection(this.jdbcUrl);
         @Cleanup
         PreparedStatement pstmt = connection.prepareStatement("select * from processed_file where file_context=?");
         pstmt.setString(1, fileContext);

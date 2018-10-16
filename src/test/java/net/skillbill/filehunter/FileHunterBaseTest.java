@@ -20,18 +20,20 @@
 
 package net.skillbill.filehunter;
 
-import net.skillbill.filehunter.dao.impl.FileProcessedRepositoryJdbcImpl;
-
-import java.io.File;
+import net.skillbill.filehunter.dao.impl.FileProcessedRepositoryJdbcSqliteImpl;
 
 
 public class FileHunterBaseTest {
 
-    private static FileHunter fh = new FileHunter(new FileProcessedRepositoryJdbcImpl(null, null, null, null), (tempFile, fileUrl) -> new FileProcessorResult("ok", null),"test",
+    private static FileHunter fh = new FileHunter(new FileProcessedRepositoryJdbcSqliteImpl("filehunter.db"), (tempFile, fileUrl) -> new FileProcessorResult("ok", null),"test",
             "smb://10.11.11.84/K",
             "data", ".+\\.pdf", null, "skillbill", "skillbill");
 
+    private static FileHunter fhC = new FileHunter(new FileProcessedRepositoryJdbcSqliteImpl("filehunter.db"), (tempFile, fileUrl) -> new FileProcessorResult("ok", null),"test",
+            "sftp://contaclab:SR1lab2017!@ftp.sergiorossi.com",
+            "sergiorossi/contactone/", ".+\\.csv", null, null, null);
+
     public static void main(String[] args){
-        fh.execute();
+        fhC.execute();
     }
 }
