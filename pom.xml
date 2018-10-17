@@ -10,10 +10,23 @@
     <packaging>jar</packaging>
     <licenses>
         <license>
-            <name>GNU LESSER GENERAL PUBLIC LICENSE 2.1</name>
+            <name>GNU Lesser General Public License v2.1</name>
             <url>https://github.com/Skillbill/filehunter/blob/master/LICENSE</url>
         </license>
     </licenses>
+    <developers>
+        <developer>
+            <name>Francesco Ciacca</name>
+            <email>francesco@skillbill.it</email>
+            <organization>Skillbill srl</organization>
+            <organizationUrl>http://www.skillbill.it/</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git://github.com:Skillbill/filehunter.git</connection>
+        <developerConnection>scm:git:ssh://github.com:Skillbill/filehunter.git</developerConnection>
+        <url>https://github.com/Skillbill/filehunter</url>
+    </scm>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
