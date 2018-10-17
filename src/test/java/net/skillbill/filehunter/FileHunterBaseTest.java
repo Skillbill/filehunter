@@ -29,11 +29,7 @@ public class FileHunterBaseTest {
             "smb://10.11.11.84/K",
             "data", ".+\\.pdf", null, "skillbill", "skillbill");
 
-    private static FileHunter fhC = new FileHunter(new FileProcessedRepositoryJdbcSqliteImpl("filehunter.db"), (tempFile, fileUrl) -> new FileProcessorResult("ok", null),"test",
-            "sftp://contaclab:SR1lab2017!@ftp.sergiorossi.com",
-            "sergiorossi/contactone/", ".+\\.csv", null, null, null);
-
     public static void main(String[] args){
-        fhC.execute();
+        fh.execute();
     }
 }
